@@ -189,7 +189,8 @@ if __name__ == "__main__":
         # color / wrap_text / bold # 
         for rows in ws.iter_rows(min_row=2, max_row=2, min_col=1):
             for cell in rows:
-                cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='top')
+                cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='top'
+                                                            wrapText=True)
                 cell.font = openpyxl.styles.Font(bold=True)
                 cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC', 
                                                 end_color='7F03ADFC', fill_type = 'solid')
