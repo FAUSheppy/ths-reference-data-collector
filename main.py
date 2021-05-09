@@ -176,14 +176,15 @@ if __name__ == "__main__":
         ws.insert_rows(1)
         ws.merge_cells('A1:H1')
         cell = ws['A1']
-        cell.value = ws.title
-        ws['A1'].alignment = openpyxl.styles.Alignment(horizontal='center')
+        cell.value = ws.title[len("Wetterdaten-"):-4].replace("-"," ")
+        ws['A1'].alignment = openpyxl.styles.Alignment(horizontal='center', vertical='center')
         cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC', 
                                         end_color='7F03ADFC', fill_type = 'solid')
         cell.font = openpyxl.styles.Font(bold=True)
+        ws.row_dimensions[1].height = 30
 
         # row height of header (second row behind title) #
-        ws.row_dimensions[2].height = 40
+        ws.row_dimensions[2].height = 55
 
         # color / wrap_text / bold # 
         for rows in ws.iter_rows(min_row=2, max_row=2, min_col=1):
