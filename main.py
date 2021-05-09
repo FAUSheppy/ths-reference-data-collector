@@ -7,6 +7,7 @@ import requests
 import csv
 import pyexcel.cookbook
 import pyexcel
+import openpyxl
 import glob
 import calendar
 
@@ -20,13 +21,13 @@ OUTSIDE_DATA_URL     = "http://umweltdaten.nuernberg.de/csv/wetterdaten/messstat
 
 headerMappings = { 
             "time"                  : "Datum/Zeit", 
-            "lufttemperatur-aussen" : "Temperatur [°C]",
-            "kelvin"                : "Temperatur [K]" ,
-            "luftfeuchte"           : "rel. Luftfeuchte [%]",
-            "luftdruck"             : "Luftdruck [mbar]",
-            "windgeschwindigkeit"   : "Windgeschwindigkeit [m/s]",
-            "windrichtung"          : "Windrichtung N=0, O=90, S=180, W=270",
-            "niederschlagsmenge"    : "Niederschlag [mm = L/m2]" }
+            "lufttemperatur-aussen" : "Temperatur\n[°C]",
+            "kelvin"                : "Temperatur\n[K]" ,
+            "luftfeuchte"           : "rel. Luftfeuchte\n[%]",
+            "luftdruck"             : "Luftdruck\n[mbar]",
+            "windgeschwindigkeit"   : "Windgeschwindig-\nkeit\n[m/s]",
+            "windrichtung"          : "Windrichtung\nN=0, O=90,\nS=180, W=270",
+            "niederschlagsmenge"    : "Niederschlag\n[mm = L/m2]" }
 
 dtypes  = [ "lufttemperatur-aussen", "luftfeuchte", "luftdruck", "windgeschwindigkeit", "windrichtung", "niederschlagsmenge" ]
 
@@ -154,4 +155,42 @@ if __name__ == "__main__":
         sheets.update({ os.path.basename(f) : sheet })
     
     book = pyexcel.get_book(bookdict=sheets)
-    book.save_as("Wetterdaten.xlsx")
+    outfileRaw = "Wetterdaten.xlsx"
+    book.save_as(outfileRaw)
+
+    # formating and style #
+    wb = openpyxl.load_workbook(filename=outfileRaw)
+    longColStart = 5
+    for ws in wb.worksheets:
+
+        # width #
+        for col in ws.columns:
+            width = 20
+            longColStart -= 1
+            if longColStart < 0:
+                width = 40
+            ws.column_dimensions[col[0].column_letter].width = 20
+
+
+        # insert month info row
+        ws.insert_rows(1)
+        ws.merge_cells('A1:H1')
+        cell = ws['A1']
+        cell.value = ws.title
+        ws['A1'].alignment = openpyxl.styles.Alignment(horizontal='center')
+        cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC', 
+                                        end_color='7F03ADFC', fill_type = 'solid')
+        cell.font = openpyxl.styles.Font(bold=True)
+
+        # row height of header (second row behind title) #
+        ws.row_dimensions[2].height = 40
+
+        # color / wrap_text / bold # 
+        for rows in ws.iter_rows(min_row=2, max_row=2, min_col=1):
+            for cell in rows:
+                cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='top')
+                cell.font = openpyxl.styles.Font(bold=True)
+                cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC', 
+                                                end_color='7F03ADFC', fill_type = 'solid')
+
+    wb.save(outfileRaw)
