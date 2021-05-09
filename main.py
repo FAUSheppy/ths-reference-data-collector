@@ -204,4 +204,9 @@ if __name__ == "__main__":
             for cell in row:
                 cell.style = DATE_STYLE
 
+        # center everything #
+        for row in ws.iter_rows(min_row=3, min_col=1):
+            for cell in row:
+                cell.alignment = openpyxl.styles.Alignment(horizontal='center')
+
     wb.save(outfileRaw)
