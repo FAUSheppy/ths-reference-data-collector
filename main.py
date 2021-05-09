@@ -17,6 +17,7 @@ CACHE_DIR = "cache"
 CACHE_FILE_TEMPLATE  = "cache_{}_{}_{}.data"
 NFF_URL_TIMEFORMAT   = "%d.%m.%Y"
 NFF_INPUT_TIMEFORMAT = "%d.%m.%Y %H:%M"
+TIME_FMT_DE_EXCEL    = "%d.%m.%Y %H:%M"
 OUTSIDE_DATA_URL     = "http://umweltdaten.nuernberg.de/csv/wetterdaten/messstation-nuernberg-flugfeld/archiv/csv-export/SUN/nuernberg-flugfeld/{dtype}/individuell/{fromDate}/{toDate}/export.csv"
 
 headerMappings = { 
@@ -99,7 +100,7 @@ def checkLastMonths(backwardsMonths=6):
             writer.writeheader()
 
             for key in fullContentDict.keys():
-                rowdict = { headerMappings["time"] : key }
+                rowdict = { headerMappings["time"] : key.strftime(TIME_FMT_DE_EXCEL) }
                 for data in fullContentDict[key]:
                     rowdict.update({ headerMappings[data.dtype] : data.value })
 
@@ -189,7 +190,7 @@ if __name__ == "__main__":
         # color / wrap_text / bold # 
         for rows in ws.iter_rows(min_row=2, max_row=2, min_col=1):
             for cell in rows:
-                cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='top'
+                cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='top',
                                                             wrapText=True)
                 cell.font = openpyxl.styles.Font(bold=True)
                 cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC', 
