@@ -21,6 +21,7 @@ OUTSIDE_DATA_URL     = "http://umweltdaten.nuernberg.de/csv/wetterdaten/messstat
 headerMappings = { 
             "time"                  : "Datum/Zeit", 
             "lufttemperatur-aussen" : "Temperatur [°C]",
+            "kelvin"                : "Temperatur [K]" ,
             "luftfeuchte"           : "rel. Luftfeuchte [%]",
             "luftdruck"             : "Luftdruck [mbar]",
             "windgeschwindigkeit"   : "Windgeschwindigkeit [m/s]",
@@ -100,6 +101,11 @@ def checkLastMonths(backwardsMonths=6):
                 rowdict = { headerMappings["time"] : key }
                 for data in fullContentDict[key]:
                     rowdict.update({ headerMappings[data.dtype] : data.value })
+
+                    # calc kelvin if temp #
+                    if data.dtype == "lufttemperatur-aussen":
+                        rowdict.update({ headerMappings["kelvin"] : data.value + 273 })
+                
                 writer.writerow(rowdict) 
 
 def parse(content, dtype):
