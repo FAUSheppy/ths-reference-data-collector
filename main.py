@@ -18,6 +18,9 @@ CACHE_FILE_TEMPLATE  = "cache_{}_{}_{}.data"
 NFF_URL_TIMEFORMAT   = "%d.%m.%Y"
 NFF_INPUT_TIMEFORMAT = "%d.%m.%Y %H:%M"
 TIME_FMT_DE_EXCEL    = "%d.%m.%Y %H:%M"
+
+DATE_STYLE = openpyxl.styles.NamedStyle(name='custom_de_datetime', number_format='DD.MM.YYYY HH:MM')
+
 OUTSIDE_DATA_URL     = "http://umweltdaten.nuernberg.de/csv/wetterdaten/messstation-nuernberg-flugfeld/archiv/csv-export/SUN/nuernberg-flugfeld/{dtype}/individuell/{fromDate}/{toDate}/export.csv"
 
 headerMappings = { 
@@ -100,7 +103,7 @@ def checkLastMonths(backwardsMonths=6):
             writer.writeheader()
 
             for key in fullContentDict.keys():
-                rowdict = { headerMappings["time"] : key.strftime(TIME_FMT_DE_EXCEL) }
+                rowdict = { headerMappings["time"] : key }
                 for data in fullContentDict[key]:
                     rowdict.update({ headerMappings[data.dtype] : data.value })
 
@@ -188,12 +191,17 @@ if __name__ == "__main__":
         ws.row_dimensions[2].height = 55
 
         # color / wrap_text / bold # 
-        for rows in ws.iter_rows(min_row=2, max_row=2, min_col=1):
-            for cell in rows:
+        for row in ws.iter_rows(min_row=2, max_row=2, min_col=1):
+            for cell in row:
                 cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='top',
                                                             wrapText=True)
                 cell.font = openpyxl.styles.Font(bold=True)
                 cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC', 
                                                 end_color='7F03ADFC', fill_type = 'solid')
+
+        # date format #
+        for row in ws.iter_rows(min_row=3, min_col=1, max_col=1):
+            for cell in row:
+                cell.style = DATE_STYLE
 
     wb.save(outfileRaw)
