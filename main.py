@@ -4,16 +4,29 @@ import datetime as dt
 import dateutil.relativedelta
 import os
 import requests
-import timeutils
 import csv
+import pyexcel.cookbook
+import pyexcel
+import glob
+import calendar
 
+
+CSV_DIR = "csvfiles"
 CACHE_DIR = "cache"
 CACHE_FILE_TEMPLATE  = "cache_{}_{}_{}.data"
 NFF_URL_TIMEFORMAT   = "%d.%m.%Y"
 NFF_INPUT_TIMEFORMAT = "%d.%m.%Y %H:%M"
 OUTSIDE_DATA_URL     = "http://umweltdaten.nuernberg.de/csv/wetterdaten/messstation-nuernberg-flugfeld/archiv/csv-export/SUN/nuernberg-flugfeld/{dtype}/individuell/{fromDate}/{toDate}/export.csv"
 
-headers = [ "Datum/Zeit", "Temperatur [°C]", "rel. Luftfeuchte [%]", "Luftdruck [mbar]", "Windgeschwindigkeit [m/s]", "Windrichtung N=0, O=90, S=180, W=270", "Niederschlag [mm = L/m2]"]
+headerMappings = { 
+            "time"                  : "Datum/Zeit", 
+            "lufttemperatur-aussen" : "Temperatur [°C]",
+            "luftfeuchte"           : "rel. Luftfeuchte [%]",
+            "luftdruck"             : "Luftdruck [mbar]",
+            "windgeschwindigkeit"   : "Windgeschwindigkeit [m/s]",
+            "windrichtung"          : "Windrichtung N=0, O=90, S=180, W=270",
+            "niederschlagsmenge"    : "Niederschlag [mm = L/m2]" }
+
 dtypes  = [ "lufttemperatur-aussen", "luftfeuchte", "luftdruck", "windgeschwindigkeit", "windrichtung", "niederschlagsmenge" ]
 
 def downloadFlugfeldData(fromTime, toTime, dtype):
@@ -45,7 +58,6 @@ def downloadFlugfeldData(fromTime, toTime, dtype):
 
 def checkLastMonths(backwardsMonths=6):
    
-    fullContentDict = dict()
 
     today = dt.datetime.today() 
     monthsToCheck = [ today.month - x for x in range(0, backwardsMonths)  ]
@@ -53,6 +65,7 @@ def checkLastMonths(backwardsMonths=6):
 
     for monthNumber in monthsToCheckFixed:
         
+        fullContentDict = dict()
         year = today.year
         if monthNumber > today.month:
             year = today.year - 1
@@ -74,7 +87,20 @@ def checkLastMonths(backwardsMonths=6):
                 else:
                     fullContentDict.update({ d.time : [d] })
 
-    return fullContentDict
+        # parse and dump
+        csvOut = os.path.join(CSV_DIR, 'Wetterdaten-{}-{}.csv'.format(
+                                            calendar.month_name[monthNumber], year))
+        with open(csvOut, 'w', newline='') as file:
+
+            fieldnames = list(headerMappings.values())
+            writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter=";")
+            writer.writeheader()
+
+            for key in fullContentDict.keys():
+                rowdict = { headerMappings["time"] : key }
+                for data in fullContentDict[key]:
+                    rowdict.update({ headerMappings[data.dtype] : data.value })
+                writer.writerow(rowdict) 
 
 def parse(content, dtype):
     skipBecauseFirstLine = True
@@ -113,17 +139,13 @@ class Data:
         return "Data: {} {} {}".format(self.dtype, self.time, self.value)
 
 if __name__ == "__main__":
-    dictForCSV = checkLastMonths()
-
-    with open('test.csv', 'w', newline='') as file:
-
-        fieldnames = ["time"] + dtypes
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-
-        for key in dictForCSV.keys():
-            rowdict = { "time" : key }
-            for data in dictForCSV[key]:
-                rowdict.update({ data.dtype : data.value })
-            writer.writerow(rowdict) 
-
+    checkLastMonths()
+    
+    globPattern = "{}/*.csv".format(CSV_DIR)
+    sheets = {}
+    for f in glob.glob(globPattern):
+        sheet = pyexcel.get_sheet(file_name=f, delimiter=";")
+        sheets.update({ os.path.basename(f) : sheet })
+    
+    book = pyexcel.get_book(bookdict=sheets)
+    book.save_as("Wetterdaten.xlsx")
