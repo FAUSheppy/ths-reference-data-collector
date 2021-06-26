@@ -1,0 +1,2 @@
+This tool can be used to create well-formated excel-spreadsheets from the data provided by the weather station of [Nürnberg Flugfeld](http://umweltdaten.nuernberg.de/wetterdaten/messstation-nuernberg-flugfeld.html) (and potentially any other station using the same format).
+It automatically downloads and combines the data of the last 6 months and outputs a single Excel-File with multiple sub-tables.
