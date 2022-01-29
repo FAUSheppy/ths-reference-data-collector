@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import argparse
 import datetime as dt
 import dateutil.relativedelta
 import os
@@ -23,8 +24,8 @@ DATE_STYLE = openpyxl.styles.NamedStyle(name='custom_de_datetime', number_format
 
 OUTSIDE_DATA_URL     = "http://umweltdaten.nuernberg.de/csv/wetterdaten/messstation-nuernberg-flugfeld/archiv/csv-export/SUN/nuernberg-flugfeld/{dtype}/individuell/{fromDate}/{toDate}/export.csv"
 
-headerMappings = { 
-            "time"                  : "Datum/Zeit", 
+headerMappings = {
+            "time"                  : "Datum/Zeit",
             "lufttemperatur-aussen" : "Temperatur\n[°C]",
             "kelvin"                : "Temperatur\n[K]" ,
             "luftfeuchte"           : "rel. Luftfeuchte\n[%]",
@@ -63,14 +64,14 @@ def downloadFlugfeldData(fromTime, toTime, dtype):
     return content
 
 def checkLastMonths(backwardsMonths=6):
-   
 
-    today = dt.datetime.today() 
+
+    today = dt.datetime.today()
     monthsToCheck = [ today.month - x for x in range(0, backwardsMonths)  ]
     monthsToCheckFixed = list(map(lambda x: x if x > 0 else x + 12, monthsToCheck))
 
     for monthNumber in monthsToCheckFixed:
-        
+
         fullContentDict = dict()
         year = today.year
         if monthNumber > today.month:
@@ -110,8 +111,8 @@ def checkLastMonths(backwardsMonths=6):
                     # calc kelvin if temp #
                     if data.dtype == "lufttemperatur-aussen":
                         rowdict.update({ headerMappings["kelvin"] : data.value + 273 })
-                
-                writer.writerow(rowdict) 
+
+                writer.writerow(rowdict)
 
 def parse(content, dtype):
     skipBecauseFirstLine = True
@@ -150,16 +151,25 @@ class Data:
         return "Data: {} {} {}".format(self.dtype, self.time, self.value)
 
 if __name__ == "__main__":
+
+    # parse arguments #
+    parser = argparse.ArgumentParser(description='Reference Data Collector DWD')
+    parser.add_argument('--target-file', default="Weatherdata.xlsx", help='File(-path) to save to')
+    args = parser.parse_args()
+
+    # check laste months #
     checkLastMonths()
-    
+
+    # read in csv's #
     globPattern = "{}/*.csv".format(CSV_DIR)
     sheets = {}
     for f in glob.glob(globPattern):
         sheet = pyexcel.get_sheet(file_name=f, delimiter=";")
         sheets.update({ os.path.basename(f) : sheet })
-    
+
+    # open & save spreadsheet book #
     book = pyexcel.get_book(bookdict=sheets)
-    outfileRaw = "Wetterdaten.xlsx"
+    outfileRaw = args.target_file
     book.save_as(outfileRaw)
 
     # formating and style #
@@ -182,7 +192,7 @@ if __name__ == "__main__":
         cell = ws['A1']
         cell.value = ws.title[len("Wetterdaten-"):-4].replace("-"," ")
         ws['A1'].alignment = openpyxl.styles.Alignment(horizontal='center', vertical='center')
-        cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC', 
+        cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC',
                                         end_color='7F03ADFC', fill_type = 'solid')
         cell.font = openpyxl.styles.Font(bold=True)
         ws.row_dimensions[1].height = 30
@@ -190,13 +200,13 @@ if __name__ == "__main__":
         # row height of header (second row behind title) #
         ws.row_dimensions[2].height = 55
 
-        # color / wrap_text / bold # 
+        # color / wrap_text / bold #
         for row in ws.iter_rows(min_row=2, max_row=2, min_col=1):
             for cell in row:
                 cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='top',
                                                             wrapText=True)
                 cell.font = openpyxl.styles.Font(bold=True)
-                cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC', 
+                cell.fill = openpyxl.styles.PatternFill(start_color='7F03ADFC',
                                                 end_color='7F03ADFC', fill_type = 'solid')
 
         # date format #
