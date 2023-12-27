@@ -17,7 +17,7 @@ import locale
 import fallback_csv
 import platform
 
-if not platform.system() == "Linux":
+if platform.system() != "Linux":
     locale.setlocale(locale.LC_TIME, "de_DE.UTF-8")
 
 CSV_DIR = "csvfiles"
@@ -114,8 +114,6 @@ def checkLastMonths(backwardsMonths=6):
 
         # parse and dump
         mname = calendar.month_name[monthNumber]
-        if monthNumber == 3:
-            mname = "März" # fix german months
 
         csvOut = os.path.join(CSV_DIR, 'Wetterdaten-{}-{}.csv'.format(mname, year))
         with open(csvOut, 'w', newline='', encoding="utf-8") as file:
