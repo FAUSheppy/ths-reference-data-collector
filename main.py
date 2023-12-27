@@ -114,6 +114,8 @@ def checkLastMonths(backwardsMonths=6):
 
         # parse and dump
         mname = calendar.month_name[monthNumber]
+        if monthNumber == 3:
+            mname = "März" # fix german months
 
         csvOut = os.path.join(CSV_DIR, 'Wetterdaten-{}-{}.csv'.format(mname, year))
         with open(csvOut, 'w', newline='', encoding="utf-8") as file:
@@ -168,6 +170,10 @@ class Data:
 
     def __str__(self):
         return "Data: {} {} {}".format(self.dtype, self.time, self.value)
+
+def sort_func(s):
+    tile = s.title.replace("März", calendar.month_name[3]) # fix german ä
+    return datetime.datetime.strptime(s.title, "Wetterdaten-%B-%Y.csv")
 
 if __name__ == "__main__":
 
