@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import datetime
 import argparse
 import datetime as dt
 import dateutil.relativedelta
@@ -230,5 +231,9 @@ if __name__ == "__main__":
         for row in ws.iter_rows(min_row=3, min_col=1):
             for cell in row:
                 cell.alignment = openpyxl.styles.Alignment(horizontal='center')
+
+    # sort the sheets #
+    sort_func = lambda s: datetime.datetime.strptime(s.title, "Wetterdaten-%B-%Y.csv")
+    wb._sheets.sort(key=sort_func, reverse=True)
 
     wb.save(outfileRaw)
