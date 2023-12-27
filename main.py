@@ -172,8 +172,8 @@ class Data:
         return "Data: {} {} {}".format(self.dtype, self.time, self.value)
 
 def sort_func(s):
-    tile = s.title.replace("März", calendar.month_name[3]) # fix german ä
-    return datetime.datetime.strptime(s.title, "Wetterdaten-%B-%Y.csv")
+    title = s.title.replace("März", calendar.month_name[3]) # fix german ä
+    return datetime.datetime.strptime(title, "Wetterdaten-%B-%Y.csv")
 
 if __name__ == "__main__":
 
@@ -245,7 +245,6 @@ if __name__ == "__main__":
                 cell.alignment = openpyxl.styles.Alignment(horizontal='center')
 
     # sort the sheets #
-    sort_func = lambda s: datetime.datetime.strptime(s.title, "Wetterdaten-%B-%Y.csv")
     wb._sheets.sort(key=sort_func, reverse=True)
 
     wb.save(outfileRaw)
