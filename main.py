@@ -13,7 +13,12 @@ import openpyxl
 import glob
 import calendar
 
+import locale
 import fallback_csv
+import platform
+
+if not platform.system() == "Linux":
+    locale.setlocale(locale.LC_TIME, "de_DE.UTF-8")
 
 CSV_DIR = "csvfiles"
 CACHE_DIR = "cache"
@@ -108,8 +113,11 @@ def checkLastMonths(backwardsMonths=6):
                     fullContentDict.update({ d.time : [d] })
 
         # parse and dump
-        csvOut = os.path.join(CSV_DIR, 'Wetterdaten-{}-{}.csv'.format(
-                                            calendar.month_name[monthNumber], year))
+        mname = calendar.month_name[monthNumber]
+        if monthNumber == 3:
+            mname = "März" # fix german months
+
+        csvOut = os.path.join(CSV_DIR, 'Wetterdaten-{}-{}.csv'.format(mname, year))
         with open(csvOut, 'w', newline='', encoding="utf-8") as file:
 
             fieldnames = list(headerMappings.values())
