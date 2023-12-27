@@ -12,6 +12,7 @@ import openpyxl
 import glob
 import calendar
 
+import fallback_csv
 
 CSV_DIR = "csvfiles"
 CACHE_DIR = "cache"
@@ -52,12 +53,20 @@ def downloadFlugfeldData(fromTime, toTime, dtype):
         r = requests.get(url)
         content = r.content.decode('utf-8', "ignore") # ignore bad bytes
 
+        # check response code #
+        if r.status_code != 200 or "nicht gefunden" in r.text.lower():
+            print("Flugfeld kapott")
+            content = fallback_csv.generate("./dwd", fromTime, toTime, cacheFile, dtype)
+        else:
+            content = r.content.decode('utf-8', "ignore") # ignore bad bytes
+
         # cache data
         if not os.path.isdir(cacheDir):
             os.mkdir(cacheDir)
         with open(fullpath, 'w') as f:
             f.write(content)
-    else:
+
+    if os.path.isfile(fullpath):
         with open(fullpath) as f:
             content = f.read()
 
@@ -79,11 +88,14 @@ def checkLastMonths(backwardsMonths=6):
         start = dt.datetime(year=year, month=monthNumber, day=1)
         end = start + dateutil.relativedelta.relativedelta(months=+1, seconds=-1)
 
+
         # check special cases #
         if end > today:
-            end = today - dt.timedelta(days=1)
+            end = today - dt.timedelta(days=4)
             if start > end:
                 return ""
+
+        print(start, end)
 
         for dtype in dtypes:
             content = downloadFlugfeldData(start, end, dtype)
