@@ -61,7 +61,6 @@ def downloadFlugfeldData(fromTime, toTime, dtype):
 
         # check response code #
         if r.status_code != 200 or "nicht gefunden" in r.text.lower():
-            print("Flugfeld kapott")
             content = fallback_csv.generate("./dwd", fromTime, toTime, cacheFile, dtype)
         else:
             content = r.content.decode('utf-8', "ignore") # ignore bad bytes
@@ -100,8 +99,6 @@ def checkLastMonths(backwardsMonths=6):
             end = today - dt.timedelta(days=4)
             if start > end:
                 return ""
-
-        print(start, end)
 
         for dtype in dtypes:
             content = downloadFlugfeldData(start, end, dtype)

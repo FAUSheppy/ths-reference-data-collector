@@ -1,6 +1,6 @@
 pyexcel
 pyexcel-xls
 pyexcel-xlsx
-calendar
 requests
-dateutil
+tk
+plyer
