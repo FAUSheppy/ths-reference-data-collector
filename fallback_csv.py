@@ -1,8 +1,11 @@
 import glob
 import datetime
 import os
+import tkinter
+import tkinter.messagebox
 
 SKIP_LINES = 13
+IGNORE_MISSING = False
 
 def cache_content(from_time, to_time, data, dtype):
 
@@ -38,6 +41,8 @@ def cache_content(from_time, to_time, data, dtype):
 
 def generate(master_dir, from_time, to_time, cache_file, dtype):
 
+    global IGNORE_MISSING
+
     if dtype == "lufttemperatur-aussen" or dtype == "luftfeuchte":
         base_name = "/produkt_tu_stunde*.txt"
     elif dtype == "windgeschwindigkeit" or dtype == "windrichtung":
@@ -56,10 +61,25 @@ def generate(master_dir, from_time, to_time, cache_file, dtype):
 
     # read files
     files = glob.glob(master_dir + base_name)
-
+    print(dtype, files)
     if not files:
-        raise ValueError("Keine DWD_Datei für {} in: {} gefunden. Bitte herunterladen und entpacken! https://www.dwd.de/DE/leistungen/klimadatendeutschland/klarchivstunden.html;jsessionid=C423E76B30D18F24C43F4E7E36744C8C.live21073?nn=16102".format(dtype, os.getcwd() + ", " + master_dir))
+        if IGNORE_MISSING:
+            return ""
 
+        description = "Keine DWD_Datei für {} in: {} gefunden!".format(
+                            dtype, os.getcwd() + ", " + master_dir)
+        description += "\nBitte herunterladen und entpacken!\n"
+        description += "https://www.dwd.de/DE/leistungen/klimadatendeutschland/klarchivstunden.html"
+        description += ";jsessionid=C423E76B30D18F24C43F4E7E36744C8C.live21073?nn=16102"
+        description += "\n(oder nein drücken für 'mir egal weiter')"
+        root = tkinter.Tk()
+        response = tkinter.messagebox.askyesno("Achtung", description)
+        if not response:
+            IGNORE_MISSING=True
+            return ""
+
+    
+    last_date = None
     for fname in files:
 
         start = None
@@ -89,6 +109,7 @@ def generate(master_dir, from_time, to_time, cache_file, dtype):
 
                 # parse date #
                 date = datetime.datetime.strptime(fulldate, "%Y%m%d%H")
+                last_date = date
 
                 # append data #
                 data.append((date, float(primary), float(secondary)))
@@ -105,6 +126,7 @@ def generate(master_dir, from_time, to_time, cache_file, dtype):
         print(dtype, from_time, to_time)
 
     # find a fitting frame #
+    to_time = last_date - datetime.timedelta(hours=12)
     for start, end, data in timeframes:
         if from_time >= start and to_time <= end:
             return cache_content(from_time, to_time, data, dtype)
