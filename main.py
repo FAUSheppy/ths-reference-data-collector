@@ -52,6 +52,10 @@ def downloadFlugfeldData(fromTime, toTime, dtype):
     cacheFile   = CACHE_FILE_TEMPLATE.format(dtype, fromTimeStr, toTimeStr)
     fullpath    = os.path.join(cacheDir, cacheFile)
 
+    # remove empty placeholder cache file #
+    if os.path.getsize(fullpath) == 0:
+        os.remove(fullpath)
+
     # check for cache file
     content = None
     if not os.path.isfile(fullpath):
