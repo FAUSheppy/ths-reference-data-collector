@@ -84,6 +84,7 @@ def generate(master_dir, from_time, to_time, cache_file, dtype):
         description = "Keine DWD_Datei für {} gefunden!".format(dtype)
         description += "\nAlle fehlenden Dateien ignorieren und weiter?  ('Nein' bricht den Durchlauf ab)"
         root = tkinter.Tk()
+        root.withdraw()
         response = tkinter.messagebox.askyesno("Achtung", description)
         root.withdraw()
         if response:
