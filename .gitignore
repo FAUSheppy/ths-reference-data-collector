@@ -1,4 +1,5 @@
 __pycache__/
+.~lock*
 dwd/
 cache/
 *.csv
@@ -6,3 +7,4 @@ cache/
 *.data
 *.xls
 *.xlsx
+*.txt
